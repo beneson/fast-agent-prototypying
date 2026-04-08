@@ -43,6 +43,7 @@ function App() {
             addMessage={addMessage}
             updateLastMessage={updateLastMessage}
             updateAgent={updateAgent}
+            deleteAgent={deleteAgent}
             clearMessages={clearMessages}
           />
         )}
