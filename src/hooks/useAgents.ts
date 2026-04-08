@@ -1,7 +1,6 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import type { Agent, Message, ViewState } from '../types/agent'
-import { useLocalStorage } from './useLocalStorage'
-import { createDefaultAgents } from '../data/defaultAgents'
+import { fetchPublishedAgents } from '../lib/supabase'
 
 function generateId(): string {
   return `agent-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -17,8 +16,24 @@ function toSlug(name: string): string {
 }
 
 export function useAgents() {
-  const [agents, setAgents] = useLocalStorage<Agent[]>('vtex-agents', createDefaultAgents())
+  const [agents, setAgents] = useState<Agent[]>([])
   const [viewState, setViewState] = useState<ViewState>({ view: 'empty' })
+  const [isLoading, setIsLoading] = useState(true)
+  const hasSynced = useRef(false)
+
+  // Load agents from Supabase as the single source of truth
+  useEffect(() => {
+    if (hasSynced.current) return
+    hasSynced.current = true
+
+    fetchPublishedAgents()
+      .then((publishedAgents) => {
+        setAgents(publishedAgents)
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+  }, [])
 
   const selectedAgent = useMemo(() => {
     if (viewState.view !== 'chat') return null
@@ -98,6 +113,7 @@ export function useAgents() {
     selectedAgent,
     viewState,
     setViewState,
+    isLoading,
     createAgent,
     updateAgent,
     deleteAgent,

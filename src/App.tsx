@@ -13,6 +13,7 @@ function App() {
     selectedAgent,
     viewState,
     setViewState,
+    isLoading,
     createAgent,
     updateAgent,
     deleteAgent,
@@ -28,6 +29,7 @@ function App() {
       <Layout
         agents={agents}
         viewState={viewState}
+        isLoading={isLoading}
         onSelectAgent={(id) => setViewState({ view: 'chat', agentId: id })}
         onNewAgent={() => setViewState({ view: 'new-agent' })}
         onDeleteAgent={deleteAgent}

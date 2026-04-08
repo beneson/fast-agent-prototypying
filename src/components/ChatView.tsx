@@ -1,8 +1,9 @@
-import { Settings2, Upload, Trash2 } from 'lucide-react'
+import { Settings2, Upload, Trash2, Download, Loader2 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import type { Agent } from '../types/agent'
 import { useChat } from '../hooks/useChat'
 import { downloadAgentFile } from '../lib/publish'
+import { publishAgent } from '../lib/supabase'
 import { ChatMessage } from './ChatMessage'
 import { ChatInput } from './ChatInput'
 import { PromptEditor } from './PromptEditor'
@@ -17,7 +18,7 @@ interface Props {
 
 export function ChatView({ agent, addMessage, updateLastMessage, updateAgent, clearMessages }: Props) {
   const [promptEditorOpen, setPromptEditorOpen] = useState(false)
-  const [publishFeedback, setPublishFeedback] = useState(false)
+  const [publishFeedback, setPublishFeedback] = useState<'idle' | 'publishing' | 'success' | 'error'>('idle')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { sendMessage, isStreaming, error, stopStreaming } = useChat(agent, addMessage, updateLastMessage)
 
@@ -25,11 +26,20 @@ export function ChatView({ agent, addMessage, updateLastMessage, updateAgent, cl
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [agent.messages])
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
+    setPublishFeedback('publishing')
+    const result = await publishAgent(agent)
+    if (result.success) {
+      updateAgent(agent.id, { isPublished: true })
+      setPublishFeedback('success')
+    } else {
+      setPublishFeedback('error')
+    }
+    setTimeout(() => setPublishFeedback('idle'), 2500)
+  }
+
+  const handleDownload = () => {
     downloadAgentFile(agent)
-    updateAgent(agent.id, { isPublished: true })
-    setPublishFeedback(true)
-    setTimeout(() => setPublishFeedback(false), 2000)
   }
 
   return (
@@ -56,15 +66,37 @@ export function ChatView({ agent, addMessage, updateLastMessage, updateAgent, cl
             <Settings2 className="h-4 w-4" />
           </button>
           <button
+            onClick={handleDownload}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Baixar arquivo .ts"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+          <button
             onClick={handlePublish}
+            disabled={publishFeedback === 'publishing'}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              publishFeedback
+              publishFeedback === 'success'
                 ? 'bg-green-100 text-green-700'
-                : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                : publishFeedback === 'error'
+                  ? 'bg-red-100 text-red-700'
+                  : publishFeedback === 'publishing'
+                    ? 'bg-indigo-50 text-indigo-400'
+                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
             }`}
           >
-            <Upload className="h-3.5 w-3.5" />
-            {publishFeedback ? 'Publicado!' : 'Publicar'}
+            {publishFeedback === 'publishing' ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Upload className="h-3.5 w-3.5" />
+            )}
+            {publishFeedback === 'success'
+              ? 'Publicado!'
+              : publishFeedback === 'error'
+                ? 'Erro!'
+                : publishFeedback === 'publishing'
+                  ? 'Publicando...'
+                  : 'Publicar'}
           </button>
         </div>
       </div>

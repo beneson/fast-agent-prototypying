@@ -6,13 +6,14 @@ import { Drawer } from './Drawer'
 interface Props {
   agents: Agent[]
   viewState: ViewState
+  isLoading: boolean
   onSelectAgent: (agentId: string) => void
   onNewAgent: () => void
   onDeleteAgent: (id: string) => void
   children: React.ReactNode
 }
 
-export function Layout({ agents, viewState, onSelectAgent, onNewAgent, onDeleteAgent, children }: Props) {
+export function Layout({ agents, viewState, isLoading, onSelectAgent, onNewAgent, onDeleteAgent, children }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -21,6 +22,7 @@ export function Layout({ agents, viewState, onSelectAgent, onNewAgent, onDeleteA
         agents={agents}
         viewState={viewState}
         isOpen={drawerOpen}
+        isLoading={isLoading}
         onClose={() => setDrawerOpen(false)}
         onSelectAgent={onSelectAgent}
         onNewAgent={onNewAgent}

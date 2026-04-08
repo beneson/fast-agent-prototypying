@@ -1,4 +1,4 @@
-import { Plus, X, Bot } from 'lucide-react'
+import { Plus, X, Bot, Loader2 } from 'lucide-react'
 import type { Agent, ViewState } from '../types/agent'
 import { DrawerAgentItem } from './DrawerAgentItem'
 
@@ -6,6 +6,7 @@ interface Props {
   agents: Agent[]
   viewState: ViewState
   isOpen: boolean
+  isLoading: boolean
   onClose: () => void
   onSelectAgent: (agentId: string) => void
   onNewAgent: () => void
@@ -16,6 +17,7 @@ export function Drawer({
   agents,
   viewState,
   isOpen,
+  isLoading,
   onClose,
   onSelectAgent,
   onNewAgent,
@@ -44,18 +46,28 @@ export function Drawer({
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-          {agents.map((agent) => (
-            <DrawerAgentItem
-              key={agent.id}
-              agent={agent}
-              isActive={activeAgentId === agent.id}
-              onClick={() => {
-                onSelectAgent(agent.id)
-                onClose()
-              }}
-              onDelete={() => onDeleteAgent(agent.id)}
-            />
-          ))}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+            </div>
+          ) : agents.length === 0 ? (
+            <div className="text-center py-8 text-sm text-gray-400">
+              Nenhum agente publicado.
+            </div>
+          ) : (
+            agents.map((agent) => (
+              <DrawerAgentItem
+                key={agent.id}
+                agent={agent}
+                isActive={activeAgentId === agent.id}
+                onClick={() => {
+                  onSelectAgent(agent.id)
+                  onClose()
+                }}
+                onDelete={() => onDeleteAgent(agent.id)}
+              />
+            ))
+          )}
         </div>
 
         <div className="p-3 border-t border-gray-100">
